@@ -12,6 +12,8 @@ import '../../features/notes/presentation/screens/note_detail_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/messaging/presentation/screens/messages_screen.dart';
+import '../../features/messaging/presentation/screens/chat_screen.dart';
+import '../../features/users/presentation/screens/users_screen.dart';
 import '../../shared/widgets/layouts/app_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -73,6 +75,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const MessagesScreen(),
           ),
           GoRoute(
+            path: '/app/users',
+            builder: (context, state) => const UsersScreen(),
+          ),
+          GoRoute(
             path: '/app/profile',
             builder: (context, state) => const ProfileScreen(),
           ),
@@ -93,6 +99,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/app/search',
         builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: '/app/messages/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ChatScreen(otherUserId: userId);
+        },
       ),
       GoRoute(
         path: '/app/pdf/generator',

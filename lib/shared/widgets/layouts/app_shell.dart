@@ -14,8 +14,10 @@ class AppShell extends StatelessWidget {
       return 1;
     } else if (location.startsWith('/app/messages')) {
       return 2;
-    } else if (location.startsWith('/app/profile')) {
+    } else if (location.startsWith('/app/users')) {
       return 3;
+    } else if (location.startsWith('/app/profile')) {
+      return 4;
     }
     return 0;
   }
@@ -32,6 +34,9 @@ class AppShell extends StatelessWidget {
         context.go('/app/messages');
         break;
       case 3:
+        context.go('/app/users');
+        break;
+      case 4:
         context.go('/app/profile');
         break;
     }
@@ -45,6 +50,7 @@ class AppShell extends StatelessWidget {
         location == '/app/home' ||
         location == '/app/notes' ||
         location == '/app/messages' ||
+        location == '/app/users' ||
         location == '/app/profile';
 
     // If the child is a Scaffold, extract its properties and add bottom nav
@@ -75,6 +81,11 @@ class AppShell extends StatelessWidget {
                     icon: Icon(Icons.message_outlined),
                     selectedIcon: Icon(Icons.message),
                     label: 'Messages',
+                  ),
+                  NavigationDestination(
+                    icon: Icon(Icons.people_outlined),
+                    selectedIcon: Icon(Icons.people),
+                    label: 'Users',
                   ),
                   NavigationDestination(
                     icon: Icon(Icons.person_outline),
@@ -109,6 +120,11 @@ class AppShell extends StatelessWidget {
                   icon: Icon(Icons.message_outlined),
                   selectedIcon: Icon(Icons.message),
                   label: 'Messages',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.people_outlined),
+                  selectedIcon: Icon(Icons.people),
+                  label: 'Users',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.person_outline),
