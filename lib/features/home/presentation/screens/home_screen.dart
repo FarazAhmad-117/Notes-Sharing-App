@@ -2,11 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/spacing.dart';
-import '../../../../app/theme/radius.dart';
-import '../../../../app/theme/color_schemes.dart';
 import '../../../../shared/widgets/cards/note_card.dart';
 import '../../../notes/presentation/providers/notes_provider.dart';
-import '../../../notes/data/models/note_model.dart';
 import '../providers/dashboard_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -167,7 +164,7 @@ class HomeScreen extends ConsumerWidget {
       crossAxisCount: 2,
       crossAxisSpacing: AppSpacing.md,
       mainAxisSpacing: AppSpacing.md,
-      childAspectRatio: 1.5,
+      childAspectRatio: 1.6,
       children: [
         _buildStatCard(
           context,
@@ -210,24 +207,35 @@ class HomeScreen extends ConsumerWidget {
   ) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.sm),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: color,
+            Flexible(child: Icon(icon, color: color, size: 28)),
+            const SizedBox(height: AppSpacing.xs),
+            Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                  ),
+                  maxLines: 1,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.xs),
-            Text(
-              title,
-              style: Theme.of(context).textTheme.bodySmall,
-              textAlign: TextAlign.center,
+            Flexible(
+              child: Text(
+                title,
+                style: Theme.of(context).textTheme.bodySmall,
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ],
         ),
