@@ -1,0 +1,95 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/signup_screen.dart';
+import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/auth/presentation/providers/auth_provider.dart';
+import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/notes/presentation/screens/notes_screen.dart';
+import '../../features/notes/presentation/screens/create_note_screen.dart';
+import '../../features/notes/presentation/screens/note_detail_screen.dart';
+import '../../features/search/presentation/screens/search_screen.dart';
+import '../../features/profile/presentation/screens/profile_screen.dart';
+
+final routerProvider = Provider<GoRouter>((ref) {
+  return GoRouter(
+    initialLocation: '/auth/login',
+    debugLogDiagnostics: false,
+    redirect: (BuildContext context, GoRouterState state) {
+      try {
+        final authState = ref.read(authProvider);
+        final isAuthenticated = authState.isAuthenticated;
+        final path = state.uri.path;
+        final isOnAuthPage = path.startsWith('/auth');
+
+        // If not authenticated and not on auth page, redirect to login
+        if (!isAuthenticated && !isOnAuthPage) {
+          return '/auth/login';
+        }
+
+        // If authenticated and on auth page, redirect to home
+        if (isAuthenticated && isOnAuthPage) {
+          return '/app/home';
+        }
+      } catch (e) {
+        // If auth provider is not ready, default to login
+        return '/auth/login';
+      }
+
+      return null; // No redirect needed
+    },
+    routes: [
+      // Auth routes
+      GoRoute(
+        path: '/auth/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/auth/signup',
+        builder: (context, state) => const SignupScreen(),
+      ),
+      GoRoute(
+        path: '/auth/forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+
+      // App routes
+      GoRoute(
+        path: '/app/home',
+        builder: (context, state) => const HomeScreen(),
+      ),
+      GoRoute(
+        path: '/app/notes',
+        builder: (context, state) => const NotesScreen(),
+      ),
+      // More specific routes must come before parameterized routes
+      GoRoute(
+        path: '/app/notes/create',
+        builder: (context, state) => const CreateNoteScreen(),
+      ),
+      GoRoute(
+        path: '/app/notes/:id',
+        builder: (context, state) {
+          final noteId = state.pathParameters['id']!;
+          return NoteDetailScreen(noteId: noteId);
+        },
+      ),
+      GoRoute(
+        path: '/app/search',
+        builder: (context, state) => const SearchScreen(),
+      ),
+      GoRoute(
+        path: '/app/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/app/pdf/generator',
+        builder: (context, state) => Scaffold(
+          appBar: AppBar(title: const Text('PDF Generator')),
+          body: const Center(child: Text('PDF Generator coming soon')),
+        ),
+      ),
+    ],
+  );
+});
