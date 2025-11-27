@@ -11,6 +11,8 @@ import '../../features/notes/presentation/screens/create_note_screen.dart';
 import '../../features/notes/presentation/screens/note_detail_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
+import '../../features/messaging/presentation/screens/messages_screen.dart';
+import '../../shared/widgets/layouts/app_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
@@ -54,16 +56,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ForgotPasswordScreen(),
       ),
 
-      // App routes
-      GoRoute(
-        path: '/app/home',
-        builder: (context, state) => const HomeScreen(),
+      // App routes with bottom navigation
+      ShellRoute(
+        builder: (context, state, child) => AppShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/app/home',
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/app/notes',
+            builder: (context, state) => const NotesScreen(),
+          ),
+          GoRoute(
+            path: '/app/messages',
+            builder: (context, state) => const MessagesScreen(),
+          ),
+          GoRoute(
+            path: '/app/profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
+        ],
       ),
-      GoRoute(
-        path: '/app/notes',
-        builder: (context, state) => const NotesScreen(),
-      ),
-      // More specific routes must come before parameterized routes
+      // Nested routes (without bottom nav)
       GoRoute(
         path: '/app/notes/create',
         builder: (context, state) => const CreateNoteScreen(),
@@ -78,10 +93,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/app/search',
         builder: (context, state) => const SearchScreen(),
-      ),
-      GoRoute(
-        path: '/app/profile',
-        builder: (context, state) => const ProfileScreen(),
       ),
       GoRoute(
         path: '/app/pdf/generator',
