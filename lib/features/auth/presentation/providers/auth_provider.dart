@@ -267,6 +267,31 @@ class AuthNotifier extends Notifier<AuthState> {
       );
     }
   }
+
+  Future<void> deleteAccount(String password) async {
+    AppLogger.auth('Delete account attempt');
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      final repository = ref.read(authRepositoryProvider);
+      await repository.deleteAccount(password);
+      AppLogger.auth('Account deleted successfully');
+      // Sign out and reset state after account deletion
+      await repository.logout();
+      state = AuthState.initial();
+    } catch (e, stackTrace) {
+      final errorMessage = _extractErrorMessage(e);
+      AppLogger.error('Delete account failed', e, stackTrace);
+      state = state.copyWith(
+        isLoading: false,
+        error: errorMessage.isNotEmpty
+            ? errorMessage
+            : 'Failed to delete account. Please try again.',
+      );
+      // Re-throw to allow UI to handle it if needed
+      rethrow;
+    }
+  }
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(() {

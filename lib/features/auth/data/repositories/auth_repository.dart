@@ -8,6 +8,7 @@ abstract class AuthRepository {
   Future<User?> getCurrentUser();
   Future<void> sendPasswordResetEmail(String email);
   Future<void> sendEmailVerification();
+  Future<void> deleteAccount(String password);
 }
 
 // Dummy implementation for UI development
@@ -18,7 +19,7 @@ class DummyAuthRepository implements AuthRepository {
   Future<User?> login(String email, String password) async {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
-    
+
     // Dummy login - accept any email/password
     if (email.isNotEmpty && password.isNotEmpty) {
       _currentUser = User(
@@ -37,7 +38,7 @@ class DummyAuthRepository implements AuthRepository {
   @override
   Future<User> signup(String email, String password, String displayName) async {
     await Future.delayed(const Duration(seconds: 1));
-    
+
     _currentUser = User(
       uid: 'user_${DateTime.now().millisecondsSinceEpoch}',
       email: email,
@@ -74,5 +75,14 @@ class DummyAuthRepository implements AuthRepository {
       _currentUser = _currentUser!.copyWith(isEmailVerified: true);
     }
   }
-}
 
+  @override
+  Future<void> deleteAccount(String password) async {
+    await Future.delayed(const Duration(seconds: 1));
+    // Verify password matches (dummy check - in real app, verify against stored password)
+    if (password.isEmpty) {
+      throw Exception('Password is required');
+    }
+    _currentUser = null;
+  }
+}

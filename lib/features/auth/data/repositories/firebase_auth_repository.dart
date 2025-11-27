@@ -215,6 +215,47 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
+  @override
+  Future<void> deleteAccount(String password) async {
+    try {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('No user is currently signed in');
+      }
+
+      if (currentUser.email == null) {
+        throw Exception('User email is not available');
+      }
+
+      // Re-authenticate the user with their password before deletion
+      // This is required by Firebase for security-sensitive operations
+      final credential = firebase_auth.EmailAuthProvider.credential(
+        email: currentUser.email!,
+        password: password,
+      );
+
+      await currentUser.reauthenticateWithCredential(credential);
+
+      // Delete user document from Firestore first
+      try {
+        await _firestore.collection('users').doc(currentUser.uid).delete();
+      } catch (e) {
+        // Log but don't fail if Firestore delete fails
+        // The user might not have a document yet
+      }
+
+      // Delete the Firebase Auth account
+      await currentUser.delete();
+
+      // Sign out after deletion
+      await _auth.signOut();
+    } on firebase_auth.FirebaseAuthException catch (e) {
+      throw _handleAuthException(e);
+    } catch (e) {
+      throw Exception('Delete account failed: ${e.toString()}');
+    }
+  }
+
   /// Stream of auth state changes
   Stream<firebase_auth.User?> get authStateChanges => _auth.authStateChanges();
 }
