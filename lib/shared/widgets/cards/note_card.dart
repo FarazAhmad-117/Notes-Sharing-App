@@ -8,11 +8,15 @@ class NoteCard extends StatelessWidget {
   final Note note;
   final VoidCallback? onTap;
   final VoidCallback? onLongPress;
+  final VoidCallback? onEdit;
+  final VoidCallback? onDelete;
 
   const NoteCard({
     required this.note,
     this.onTap,
     this.onLongPress,
+    this.onEdit,
+    this.onDelete,
     super.key,
   });
 
@@ -41,12 +45,38 @@ class NoteCard extends StatelessWidget {
                     child: Text(
                       note.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  // Edit and Delete Icons
+                  if (onEdit != null || onDelete != null) ...[
+                    if (onEdit != null)
+                      IconButton(
+                        icon: const Icon(Icons.edit, size: 18),
+                        onPressed: () {
+                          // Stop propagation to prevent onTap
+                          onEdit?.call();
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Edit note',
+                      ),
+                    if (onDelete != null)
+                      IconButton(
+                        icon: const Icon(Icons.delete, size: 18),
+                        onPressed: () {
+                          // Stop propagation to prevent onTap
+                          onDelete?.call();
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        color: Theme.of(context).colorScheme.error,
+                        tooltip: 'Delete note',
+                      ),
+                  ],
                 ],
               ),
               const SizedBox(height: AppSpacing.sm),
@@ -83,22 +113,26 @@ class NoteCard extends StatelessWidget {
                         vertical: AppSpacing.xs,
                       ),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(AppRadius.xs),
                       ),
                       child: Text(
                         note.category!,
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
                       ),
                     ),
                   const Spacer(),
                   Text(
                     DateFormat('MMM d, y').format(note.updatedAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                        ),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
                   ),
                 ],
               ),
@@ -109,4 +143,3 @@ class NoteCard extends StatelessWidget {
     );
   }
 }
-

@@ -17,12 +17,14 @@ import '../../features/users/presentation/screens/users_screen.dart';
 import '../../shared/widgets/layouts/app_shell.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
+  // Watch auth state so router redirects when auth state changes
+  final authState = ref.watch(authProvider);
+
   return GoRouter(
     initialLocation: '/auth/login',
     debugLogDiagnostics: false,
     redirect: (BuildContext context, GoRouterState state) {
       try {
-        final authState = ref.read(authProvider);
         final isAuthenticated = authState.isAuthenticated;
         final path = state.uri.path;
         final isOnAuthPage = path.startsWith('/auth');
@@ -94,6 +96,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final noteId = state.pathParameters['id']!;
           return NoteDetailScreen(noteId: noteId);
+        },
+      ),
+      GoRoute(
+        path: '/app/notes/:id/edit',
+        builder: (context, state) {
+          final noteId = state.pathParameters['id']!;
+          return CreateNoteScreen(noteId: noteId);
         },
       ),
       GoRoute(

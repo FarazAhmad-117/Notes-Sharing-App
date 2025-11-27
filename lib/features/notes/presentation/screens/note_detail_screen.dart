@@ -3,15 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../app/theme/spacing.dart';
+import '../../../../core/utils/toast_service.dart';
 import '../providers/notes_provider.dart';
 
 class NoteDetailScreen extends ConsumerWidget {
   final String noteId;
 
-  const NoteDetailScreen({
-    required this.noteId,
-    super.key,
-  });
+  const NoteDetailScreen({required this.noteId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -24,6 +22,12 @@ class NoteDetailScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.edit),
             onPressed: () => context.push('/app/notes/$noteId/edit'),
+            tooltip: 'Edit note',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () => _handleDelete(context, ref, noteId),
+            tooltip: 'Delete note',
           ),
           IconButton(
             icon: const Icon(Icons.share),
@@ -33,6 +37,7 @@ class NoteDetailScreen extends ConsumerWidget {
                 const SnackBar(content: Text('Sharing coming soon')),
               );
             },
+            tooltip: 'Share note',
           ),
         ],
       ),
@@ -78,21 +83,22 @@ class NoteDetailScreen extends ConsumerWidget {
               Text(
                 'Created: ${DateFormat('MMM d, y • h:mm a').format(note.createdAt)}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                    ),
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withOpacity(0.6),
+                ),
               ),
               if (note.updatedAt != note.createdAt)
                 Text(
                   'Updated: ${DateFormat('MMM d, y • h:mm a').format(note.updatedAt)}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                 ),
               const Divider(height: AppSpacing.xl),
-              Text(
-                note.content,
-                style: Theme.of(context).textTheme.bodyLarge,
-              ),
+              Text(note.content, style: Theme.of(context).textTheme.bodyLarge),
             ],
           ),
         ),
@@ -113,5 +119,45 @@ class NoteDetailScreen extends ConsumerWidget {
       ),
     );
   }
-}
 
+  Future<void> _handleDelete(
+    BuildContext context,
+    WidgetRef ref,
+    String noteId,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Note'),
+        content: const Text(
+          'Are you sure you want to delete this note? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(deleteNoteProvider(noteId).future);
+        ToastService.showSuccess('Note deleted successfully');
+        if (context.mounted) {
+          context.pop(); // Go back to notes list
+        }
+      } catch (e) {
+        ToastService.showError('Failed to delete note: $e');
+      }
+    }
+  }
+}

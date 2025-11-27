@@ -2,15 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../app/theme/spacing.dart';
+import '../../../../core/utils/toast_service.dart';
 import '../../../../shared/widgets/cards/note_card.dart';
 import '../../../notes/presentation/providers/notes_provider.dart';
 import '../providers/dashboard_provider.dart';
 
-class HomeScreen extends ConsumerWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends ConsumerState<HomeScreen> {
+  @override
+  Widget build(BuildContext context) {
     final statsAsync = ref.watch(dashboardStatsProvider);
     final recentNotesAsync = ref.watch(recentNotesProvider);
 
@@ -131,14 +137,19 @@ class HomeScreen extends ConsumerWidget {
                         ),
                         itemCount: notes.length,
                         itemBuilder: (context, index) {
+                          final note = notes[index];
                           return Padding(
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.md,
                             ),
                             child: NoteCard(
-                              note: notes[index],
+                              note: note,
                               onTap: () =>
-                                  context.push('/app/notes/${notes[index].id}'),
+                                  context.push('/app/notes/${note.id}'),
+                              onEdit: () =>
+                                  context.push('/app/notes/${note.id}/edit'),
+                              onDelete: () =>
+                                  _handleDelete(context, ref, note.id),
                             ),
                           );
                         },
@@ -155,6 +166,44 @@ class HomeScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _handleDelete(
+    BuildContext context,
+    WidgetRef ref,
+    String noteId,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Note'),
+        content: const Text(
+          'Are you sure you want to delete this note? This action cannot be undone.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(context).colorScheme.error,
+            ),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        await ref.read(deleteNoteProvider(noteId).future);
+        ToastService.showSuccess('Note deleted successfully');
+      } catch (e) {
+        ToastService.showError('Failed to delete note: $e');
+      }
+    }
   }
 
   Widget _buildStatsGrid(BuildContext context, stats) {

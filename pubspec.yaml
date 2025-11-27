@@ -52,6 +52,20 @@ dependencies:
   freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
   fluttertoast: ^8.2.8
+  
+  # File & Image Handling
+  image_picker: ^1.1.2
+  file_picker: ^8.1.4
+  path_provider: ^2.1.4
+  
+  # PDF Generation
+  pdf: ^3.11.1
+  printing: ^5.13.3
+  
+  # HTTP & File Handling
+  http: ^1.2.2
+  path: ^1.9.0
+  crypto: ^3.0.5
 
   # Firebase
   firebase_core: ^3.6.0

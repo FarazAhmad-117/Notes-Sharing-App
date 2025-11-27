@@ -36,9 +36,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             .login(_emailController.text.trim(), _passwordController.text);
 
         if (mounted) {
+          // Wait a bit for the auth state to update
+          await Future.delayed(const Duration(milliseconds: 100));
+
           final authState = ref.read(authProvider);
           if (authState.isAuthenticated) {
             ToastService.showSuccess('Login successful! Welcome back!');
+            // Router will automatically redirect due to ref.watch in routerProvider
+            // But we can also explicitly navigate
             context.go('/app/home');
           } else if (authState.error != null) {
             ToastService.showError(authState.error!);
