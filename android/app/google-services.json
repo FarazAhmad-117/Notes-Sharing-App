@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "773132701720",
+    "project_id": "notes-sharing-app-3cec7",
+    "storage_bucket": "notes-sharing-app-3cec7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:773132701720:android:e9188605035d8d521cf36d",
+        "android_client_info": {
+          "package_name": "com.example.notes_sharing_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDnoOlEooMLyQbMlhd7DyAXH4f_65Wo4ZU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/inputs/custom_text_field.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/toast_service.dart';
 import '../../../../app/theme/spacing.dart';
 import '../providers/auth_provider.dart';
 
@@ -34,22 +35,36 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   Future<void> _handleSignup() async {
     if (_formKey.currentState!.validate()) {
-      await ref
-          .read(authProvider.notifier)
-          .signup(
-            _emailController.text.trim(),
-            _passwordController.text,
-            _nameController.text.trim(),
-          );
+      try {
+        await ref
+            .read(authProvider.notifier)
+            .signup(
+              _emailController.text.trim(),
+              _passwordController.text,
+              _nameController.text.trim(),
+            );
 
-      if (mounted) {
-        final authState = ref.read(authProvider);
-        if (authState.isAuthenticated) {
-          context.go('/app/home');
-        } else if (authState.error != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(authState.error!)));
+        if (mounted) {
+          final authState = ref.read(authProvider);
+          if (authState.isAuthenticated) {
+            ToastService.showSuccess('Account created successfully! Welcome!');
+            context.go('/app/home');
+          } else if (authState.error != null) {
+            ToastService.showError(authState.error!);
+          }
+        }
+      } catch (e) {
+        // Error is already handled in the provider and shown via state
+        // But we can show toast here as well for immediate feedback
+        if (mounted) {
+          final authState = ref.read(authProvider);
+          if (authState.error != null) {
+            ToastService.showError(authState.error!);
+          } else {
+            ToastService.showError(
+              'An unexpected error occurred. Please try again.',
+            );
+          }
         }
       }
     }

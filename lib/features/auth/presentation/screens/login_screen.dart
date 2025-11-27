@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../shared/widgets/buttons/primary_button.dart';
 import '../../../../shared/widgets/inputs/custom_text_field.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/utils/toast_service.dart';
 import '../../../../app/theme/spacing.dart';
 import '../providers/auth_provider.dart';
 
@@ -29,19 +30,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   Future<void> _handleLogin() async {
     if (_formKey.currentState!.validate()) {
-      await ref.read(authProvider.notifier).login(
-            _emailController.text.trim(),
-            _passwordController.text,
-          );
+      try {
+        await ref
+            .read(authProvider.notifier)
+            .login(_emailController.text.trim(), _passwordController.text);
 
-      if (mounted) {
-        final authState = ref.read(authProvider);
-        if (authState.isAuthenticated) {
-          context.go('/app/home');
-        } else if (authState.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(authState.error!)),
-          );
+        if (mounted) {
+          final authState = ref.read(authProvider);
+          if (authState.isAuthenticated) {
+            ToastService.showSuccess('Login successful! Welcome back!');
+            context.go('/app/home');
+          } else if (authState.error != null) {
+            ToastService.showError(authState.error!);
+          }
+        }
+      } catch (e) {
+        // Error is already handled in the provider and shown via state
+        // But we can show toast here as well for immediate feedback
+        if (mounted) {
+          final authState = ref.read(authProvider);
+          if (authState.error != null) {
+            ToastService.showError(authState.error!);
+          } else {
+            ToastService.showError(
+              'An unexpected error occurred. Please try again.',
+            );
+          }
         }
       }
     }
@@ -76,8 +90,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   'Sign in to continue',
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                      ),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.6),
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: AppSpacing.xxl),
@@ -97,7 +113,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   validator: Validators.password,
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -142,4 +160,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-
