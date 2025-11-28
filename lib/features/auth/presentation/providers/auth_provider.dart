@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/utils/logger.dart';
 import '../../../../core/services/firebase_service.dart';
+import '../../../../core/services/fcm_service.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../data/repositories/firebase_auth_repository.dart';
 import '../../data/models/user_model.dart';
@@ -202,12 +203,56 @@ class AuthNotifier extends Notifier<AuthState> {
 
       if (user != null) {
         AppLogger.auth('Login successful for user: ${user.email}');
-        state = state.copyWith(
-          isLoading: false,
-          user: user,
-          isAuthenticated: true,
-          error: null,
-        );
+
+        // Initialize FCM and get token after successful login
+        if (FirebaseService.isInitialized &&
+            repository is FirebaseAuthRepository) {
+          try {
+            await FcmService.initialize();
+            final fcmToken = await FcmService.getToken();
+
+            if (fcmToken != null) {
+              // Update user document with FCM token
+              final updatedUser = user.copyWith(fcmToken: fcmToken);
+              await repository.updateFcmToken(user.uid, fcmToken);
+              AppLogger.info('FCM token saved for user: ${user.email}');
+
+              state = state.copyWith(
+                isLoading: false,
+                user: updatedUser,
+                isAuthenticated: true,
+                error: null,
+              );
+            } else {
+              state = state.copyWith(
+                isLoading: false,
+                user: user,
+                isAuthenticated: true,
+                error: null,
+              );
+            }
+          } catch (e, stackTrace) {
+            AppLogger.error(
+              'Failed to initialize FCM after login',
+              e,
+              stackTrace,
+            );
+            // Don't fail login if FCM fails
+            state = state.copyWith(
+              isLoading: false,
+              user: user,
+              isAuthenticated: true,
+              error: null,
+            );
+          }
+        } else {
+          state = state.copyWith(
+            isLoading: false,
+            user: user,
+            isAuthenticated: true,
+            error: null,
+          );
+        }
       } else {
         AppLogger.warning('Login returned null user');
         state = state.copyWith(
@@ -235,6 +280,29 @@ class AuthNotifier extends Notifier<AuthState> {
       final user = await repository.signup(email, password, displayName);
 
       AppLogger.auth('Signup successful for user: ${user.email}');
+
+      // Initialize FCM and get token after successful signup
+      if (FirebaseService.isInitialized &&
+          repository is FirebaseAuthRepository) {
+        try {
+          await FcmService.initialize();
+          final fcmToken = await FcmService.getToken();
+
+          if (fcmToken != null) {
+            // Update user document with FCM token
+            await repository.updateFcmToken(user.uid, fcmToken);
+            AppLogger.info('FCM token saved for user: ${user.email}');
+          }
+        } catch (e, stackTrace) {
+          AppLogger.error(
+            'Failed to initialize FCM after signup',
+            e,
+            stackTrace,
+          );
+          // Don't fail signup if FCM fails
+        }
+      }
+
       state = state.copyWith(
         isLoading: false,
         user: user,

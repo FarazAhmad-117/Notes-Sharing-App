@@ -9,6 +9,7 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/notes/presentation/screens/notes_screen.dart';
 import '../../features/notes/presentation/screens/create_note_screen.dart';
 import '../../features/notes/presentation/screens/note_detail_screen.dart';
+import '../../features/notes/presentation/screens/share_note_screen.dart';
 import '../../features/search/presentation/screens/search_screen.dart';
 import '../../features/profile/presentation/screens/profile_screen.dart';
 import '../../features/messaging/presentation/screens/messages_screen.dart';
@@ -103,6 +104,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final noteId = state.pathParameters['id']!;
           return CreateNoteScreen(noteId: noteId);
+        },
+      ),
+      GoRoute(
+        path: '/app/notes/:id/share',
+        builder: (context, state) {
+          final noteId = state.pathParameters['id']!;
+          final noteTitle = state.uri.queryParameters['title'] ?? 'Note';
+          return ShareNoteScreen(noteId: noteId, noteTitle: noteTitle);
         },
       ),
       GoRoute(

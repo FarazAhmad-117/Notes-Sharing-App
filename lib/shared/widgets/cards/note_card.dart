@@ -10,6 +10,8 @@ class NoteCard extends StatelessWidget {
   final VoidCallback? onLongPress;
   final VoidCallback? onEdit;
   final VoidCallback? onDelete;
+  final VoidCallback? onShare;
+  final String? sharerName; // Name of the user who shared this note
 
   const NoteCard({
     required this.note,
@@ -17,6 +19,8 @@ class NoteCard extends StatelessWidget {
     this.onLongPress,
     this.onEdit,
     this.onDelete,
+    this.onShare,
+    this.sharerName,
     super.key,
   });
 
@@ -51,13 +55,24 @@ class NoteCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  // Edit and Delete Icons
-                  if (onEdit != null || onDelete != null) ...[
+                  // Action Icons
+                  if (onEdit != null ||
+                      onDelete != null ||
+                      onShare != null) ...[
+                    if (onShare != null)
+                      IconButton(
+                        icon: const Icon(Icons.share, size: 18),
+                        onPressed: () {
+                          onShare?.call();
+                        },
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Share note',
+                      ),
                     if (onEdit != null)
                       IconButton(
                         icon: const Icon(Icons.edit, size: 18),
                         onPressed: () {
-                          // Stop propagation to prevent onTap
                           onEdit?.call();
                         },
                         padding: EdgeInsets.zero,
@@ -68,7 +83,6 @@ class NoteCard extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.delete, size: 18),
                         onPressed: () {
-                          // Stop propagation to prevent onTap
                           onDelete?.call();
                         },
                         padding: EdgeInsets.zero,
@@ -103,6 +117,27 @@ class NoteCard extends StatelessWidget {
                   }).toList(),
                 ),
               ],
+              // Sharer info (if note is shared with current user)
+              if (note.sharedBy != null && sharerName != null) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.person,
+                      size: 14,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    const SizedBox(width: AppSpacing.xs),
+                    Text(
+                      'Shared by $sharerName',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.secondary,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
@@ -125,6 +160,42 @@ class NoteCard extends StatelessWidget {
                         ),
                       ),
                     ),
+                  if (note.isShared && note.sharedWithCount > 0) ...[
+                    if (note.category != null)
+                      const SizedBox(width: AppSpacing.xs),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.sm,
+                        vertical: AppSpacing.xs,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(AppRadius.xs),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.share,
+                            size: 12,
+                            color: Theme.of(context).colorScheme.secondary,
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Text(
+                            '${note.sharedWithCount}',
+                            style: Theme.of(context).textTheme.labelSmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.secondary,
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   const Spacer(),
                   Text(
                     DateFormat('MMM d, y').format(note.updatedAt),

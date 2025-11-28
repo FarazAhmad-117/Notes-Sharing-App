@@ -258,4 +258,16 @@ class FirebaseAuthRepository implements AuthRepository {
 
   /// Stream of auth state changes
   Stream<firebase_auth.User?> get authStateChanges => _auth.authStateChanges();
+
+  /// Update FCM token for user
+  Future<void> updateFcmToken(String userId, String fcmToken) async {
+    try {
+      await _firestore.collection('users').doc(userId).update({
+        'fcmToken': fcmToken,
+        'updatedAt': firestore.Timestamp.now(),
+      });
+    } catch (e) {
+      throw Exception('Failed to update FCM token: ${e.toString()}');
+    }
+  }
 }

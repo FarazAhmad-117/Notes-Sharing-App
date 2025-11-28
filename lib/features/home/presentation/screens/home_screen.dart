@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../users/presentation/providers/users_provider.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../../app/theme/spacing.dart';
 import '../../../../core/utils/toast_service.dart';
 import '../../../../shared/widgets/cards/note_card.dart';
@@ -142,14 +144,42 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             padding: const EdgeInsets.only(
                               bottom: AppSpacing.md,
                             ),
-                            child: NoteCard(
-                              note: note,
-                              onTap: () =>
-                                  context.push('/app/notes/${note.id}'),
-                              onEdit: () =>
-                                  context.push('/app/notes/${note.id}/edit'),
-                              onDelete: () =>
-                                  _handleDelete(context, ref, note.id),
+                            child: Consumer(
+                              builder: (context, ref, _) {
+                                final authState = ref.watch(authProvider);
+                                final isOwner =
+                                    note.userId == authState.user?.uid;
+
+                                // Get sharer name if note is shared
+                                String? sharerName;
+                                if (note.sharedBy != null && !isOwner) {
+                                  final sharerAsync = ref.watch(
+                                    userDetailProvider(note.sharedBy!),
+                                  );
+                                  sharerName = sharerAsync.value?.displayName;
+                                }
+
+                                return NoteCard(
+                                  note: note,
+                                  sharerName: sharerName,
+                                  onTap: () =>
+                                      context.push('/app/notes/${note.id}'),
+                                  onEdit: isOwner
+                                      ? () => context.push(
+                                          '/app/notes/${note.id}/edit',
+                                        )
+                                      : null,
+                                  onDelete: isOwner
+                                      ? () =>
+                                            _handleDelete(context, ref, note.id)
+                                      : null,
+                                  onShare: isOwner
+                                      ? () => context.push(
+                                          '/app/notes/${note.id}/share?title=${Uri.encodeComponent(note.title)}',
+                                        )
+                                      : null,
+                                );
+                              },
                             ),
                           );
                         },

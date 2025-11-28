@@ -8,6 +8,7 @@ abstract class NoteRepository {
   Future<void> deleteNote(String noteId);
   Future<List<Note>> searchNotes(String userId, String query);
   Future<List<Note>> getRecentNotes(String userId, {int limit = 5});
+  Future<void> shareNote(String noteId, String ownerId, List<String> userIds);
 }
 
 class DummyNoteRepository implements NoteRepository {
@@ -16,7 +17,8 @@ class DummyNoteRepository implements NoteRepository {
       id: 'note_1',
       userId: 'user_123',
       title: 'Meeting Notes - Project Planning',
-      content: '# Project Planning Meeting\n\n## Agenda\n- Discuss project timeline\n- Review requirements\n- Assign tasks\n\n## Action Items\n- [ ] Create wireframes\n- [ ] Setup development environment\n- [ ] Schedule follow-up meeting',
+      content:
+          '# Project Planning Meeting\n\n## Agenda\n- Discuss project timeline\n- Review requirements\n- Assign tasks\n\n## Action Items\n- [ ] Create wireframes\n- [ ] Setup development environment\n- [ ] Schedule follow-up meeting',
       category: 'work',
       tags: ['meeting', 'project', 'planning'],
       isPinned: true,
@@ -38,7 +40,8 @@ class DummyNoteRepository implements NoteRepository {
       id: 'note_3',
       userId: 'user_123',
       title: 'Flutter Learning Resources',
-      content: '## Best Resources for Flutter\n\n1. Official Flutter Documentation\n2. Flutter YouTube Channel\n3. DartPad for practice\n4. Flutter Community',
+      content:
+          '## Best Resources for Flutter\n\n1. Official Flutter Documentation\n2. Flutter YouTube Channel\n3. DartPad for practice\n4. Flutter Community',
       category: 'learning',
       tags: ['flutter', 'programming', 'learning'],
       isPinned: false,
@@ -50,7 +53,8 @@ class DummyNoteRepository implements NoteRepository {
       id: 'note_4',
       userId: 'user_123',
       title: 'Recipe: Chocolate Cake',
-      content: '## Ingredients\n- 2 cups flour\n- 1 cup sugar\n- 1/2 cup cocoa\n- 2 eggs\n\n## Instructions\n1. Mix dry ingredients\n2. Add eggs\n3. Bake at 350°F for 30 minutes',
+      content:
+          '## Ingredients\n- 2 cups flour\n- 1 cup sugar\n- 1/2 cup cocoa\n- 2 eggs\n\n## Instructions\n1. Mix dry ingredients\n2. Add eggs\n3. Bake at 350°F for 30 minutes',
       category: 'personal',
       tags: ['recipe', 'cooking', 'dessert'],
       createdAt: DateTime.now().subtract(const Duration(days: 5)),
@@ -60,7 +64,8 @@ class DummyNoteRepository implements NoteRepository {
       id: 'note_5',
       userId: 'user_123',
       title: 'Book Recommendations',
-      content: '1. Clean Code by Robert Martin\n2. Design Patterns by Gang of Four\n3. The Pragmatic Programmer',
+      content:
+          '1. Clean Code by Robert Martin\n2. Design Patterns by Gang of Four\n3. The Pragmatic Programmer',
       category: 'learning',
       tags: ['books', 'reading'],
       createdAt: DateTime.now().subtract(const Duration(days: 7)),
@@ -71,7 +76,9 @@ class DummyNoteRepository implements NoteRepository {
   @override
   Future<List<Note>> getNotes(String userId) async {
     await Future.delayed(const Duration(milliseconds: 500));
-    return _notes.where((note) => note.userId == userId && !note.isArchived).toList()
+    return _notes
+        .where((note) => note.userId == userId && !note.isArchived)
+        .toList()
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
   }
 
@@ -82,9 +89,7 @@ class DummyNoteRepository implements NoteRepository {
       (note) => note.id == noteId,
       orElse: () => throw Exception('Note not found'),
     );
-    return note.copyWith(
-      lastAccessedAt: DateTime.now(),
-    );
+    return note.copyWith(lastAccessedAt: DateTime.now());
   }
 
   @override
@@ -136,5 +141,23 @@ class DummyNoteRepository implements NoteRepository {
       ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt))
       ..take(limit);
   }
-}
 
+  @override
+  Future<void> shareNote(
+    String noteId,
+    String ownerId,
+    List<String> userIds,
+  ) async {
+    await Future.delayed(const Duration(milliseconds: 500));
+    final index = _notes.indexWhere((note) => note.id == noteId);
+    if (index == -1) throw Exception('Note not found');
+
+    final note = _notes[index];
+    final updatedSharedWith = <String>{...note.sharedWith, ...userIds}.toList();
+    _notes[index] = note.copyWith(
+      sharedWith: updatedSharedWith,
+      isShared: true,
+      sharedWithCount: updatedSharedWith.length,
+    );
+  }
+}

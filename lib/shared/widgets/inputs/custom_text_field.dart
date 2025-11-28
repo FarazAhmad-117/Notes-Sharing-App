@@ -11,6 +11,7 @@ class CustomTextField extends StatelessWidget {
   final TextInputType? keyboardType;
   final int? maxLines;
   final Widget? suffixIcon;
+  final Widget? prefixIcon;
   final void Function(String)? onChanged;
 
   const CustomTextField({
@@ -22,6 +23,7 @@ class CustomTextField extends StatelessWidget {
     this.keyboardType,
     this.maxLines = 1,
     this.suffixIcon,
+    this.prefixIcon,
     this.onChanged,
     super.key,
   });
@@ -38,6 +40,7 @@ class CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        prefixIcon: prefixIcon,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppRadius.sm),
@@ -50,4 +53,3 @@ class CustomTextField extends StatelessWidget {
     );
   }
 }
-

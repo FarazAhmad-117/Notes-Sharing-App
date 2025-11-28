@@ -17,6 +17,9 @@ class Note {
   final DateTime? lastAccessedAt;
   final bool isShared;
   final int sharedWithCount;
+  final List<String> sharedWith; // List of user IDs this note is shared with
+  final String?
+  sharedBy; // User ID who shared this note (if it's a shared note)
 
   const Note({
     required this.id,
@@ -37,6 +40,8 @@ class Note {
     this.lastAccessedAt,
     this.isShared = false,
     this.sharedWithCount = 0,
+    this.sharedWith = const [],
+    this.sharedBy,
   });
 
   Note copyWith({
@@ -58,6 +63,8 @@ class Note {
     DateTime? lastAccessedAt,
     bool? isShared,
     int? sharedWithCount,
+    List<String>? sharedWith,
+    String? sharedBy,
   }) {
     return Note(
       id: id ?? this.id,
@@ -78,6 +85,8 @@ class Note {
       lastAccessedAt: lastAccessedAt ?? this.lastAccessedAt,
       isShared: isShared ?? this.isShared,
       sharedWithCount: sharedWithCount ?? this.sharedWithCount,
+      sharedWith: sharedWith ?? this.sharedWith,
+      sharedBy: sharedBy ?? this.sharedBy,
     );
   }
 }

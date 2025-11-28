@@ -30,6 +30,8 @@ class FirebaseNoteRepository implements NoteRepository {
           : null,
       'isShared': note.isShared,
       'sharedWithCount': note.sharedWithCount,
+      'sharedWith': note.sharedWith,
+      'sharedBy': note.sharedBy,
     };
   }
 
@@ -59,6 +61,8 @@ class FirebaseNoteRepository implements NoteRepository {
           ?.toDate(),
       isShared: data['isShared'] as bool? ?? false,
       sharedWithCount: data['sharedWithCount'] as int? ?? 0,
+      sharedWith: List<String>.from(data['sharedWith'] as List? ?? []),
+      sharedBy: data['sharedBy'] as String?,
     );
   }
 
@@ -66,18 +70,42 @@ class FirebaseNoteRepository implements NoteRepository {
   Future<List<Note>> getNotes(String userId) async {
     try {
       AppLogger.info('Fetching notes for user: $userId');
-      final snapshot = await _firestore
+
+      // Get notes created by user
+      final ownNotesSnapshot = await _firestore
           .collection('notes')
           .where('userId', isEqualTo: userId)
           .where('isArchived', isEqualTo: false)
           .get();
 
-      // Sort in memory to avoid Firestore index requirement
-      final notes =
-          snapshot.docs
-              .map((doc) => _firestoreToNote(doc.id, doc.data()))
-              .toList()
-            ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      // Get notes shared with user
+      final sharedNotesSnapshot = await _firestore
+          .collection('notes')
+          .where('sharedWith', arrayContains: userId)
+          .where('isArchived', isEqualTo: false)
+          .get();
+
+      // Combine and deduplicate notes
+      final allNotes = <String, Note>{};
+
+      for (final doc in ownNotesSnapshot.docs) {
+        final note = _firestoreToNote(doc.id, doc.data());
+        allNotes[doc.id] = note;
+      }
+
+      for (final doc in sharedNotesSnapshot.docs) {
+        final data = doc.data();
+        // Set sharedBy to the original owner for shared notes
+        final note = _firestoreToNote(doc.id, {
+          ...data,
+          'sharedBy': data['userId'], // The original owner
+        });
+        allNotes[doc.id] = note;
+      }
+
+      // Sort in memory
+      final notes = allNotes.values.toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
       AppLogger.info('Retrieved ${notes.length} notes for user: $userId');
       return notes;
@@ -205,18 +233,41 @@ class FirebaseNoteRepository implements NoteRepository {
   Future<List<Note>> getRecentNotes(String userId, {int limit = 5}) async {
     try {
       AppLogger.info('Fetching recent notes for user: $userId, limit: $limit');
-      final snapshot = await _firestore
+
+      // Get notes created by user
+      final ownNotesSnapshot = await _firestore
           .collection('notes')
           .where('userId', isEqualTo: userId)
           .where('isArchived', isEqualTo: false)
           .get();
 
-      // Sort in memory and take limit to avoid Firestore index requirement
-      final notes =
-          snapshot.docs
-              .map((doc) => _firestoreToNote(doc.id, doc.data()))
-              .toList()
-            ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+      // Get notes shared with user
+      final sharedNotesSnapshot = await _firestore
+          .collection('notes')
+          .where('sharedWith', arrayContains: userId)
+          .where('isArchived', isEqualTo: false)
+          .get();
+
+      // Combine and deduplicate notes
+      final allNotes = <String, Note>{};
+
+      for (final doc in ownNotesSnapshot.docs) {
+        final note = _firestoreToNote(doc.id, doc.data());
+        allNotes[doc.id] = note;
+      }
+
+      for (final doc in sharedNotesSnapshot.docs) {
+        final data = doc.data();
+        final note = _firestoreToNote(doc.id, {
+          ...data,
+          'sharedBy': data['userId'], // The original owner
+        });
+        allNotes[doc.id] = note;
+      }
+
+      // Sort in memory and take limit
+      final notes = allNotes.values.toList()
+        ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
       final limitedNotes = notes.take(limit).toList();
 
@@ -224,6 +275,47 @@ class FirebaseNoteRepository implements NoteRepository {
       return limitedNotes;
     } catch (e, stackTrace) {
       AppLogger.error('Failed to fetch recent notes', e, stackTrace);
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> shareNote(
+    String noteId,
+    String ownerId,
+    List<String> userIds,
+  ) async {
+    try {
+      AppLogger.info('Sharing note $noteId with ${userIds.length} users');
+
+      // Get current note
+      final noteDoc = await _firestore.collection('notes').doc(noteId).get();
+      if (!noteDoc.exists) {
+        throw Exception('Note not found');
+      }
+
+      final currentData = noteDoc.data()!;
+      final currentSharedWith = List<String>.from(
+        currentData['sharedWith'] as List? ?? [],
+      );
+
+      // Add new users to sharedWith list (avoid duplicates)
+      final updatedSharedWith = <String>{
+        ...currentSharedWith,
+        ...userIds,
+      }.toList();
+
+      // Update note with shared users
+      await _firestore.collection('notes').doc(noteId).update({
+        'sharedWith': updatedSharedWith,
+        'isShared': true,
+        'sharedWithCount': updatedSharedWith.length,
+        'updatedAt': firestore.Timestamp.now(),
+      });
+
+      AppLogger.info('Note shared successfully');
+    } catch (e, stackTrace) {
+      AppLogger.error('Failed to share note', e, stackTrace);
       rethrow;
     }
   }
