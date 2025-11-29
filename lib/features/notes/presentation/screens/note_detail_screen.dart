@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import '../../../../app/theme/spacing.dart';
 import '../../../../core/utils/toast_service.dart';
 import '../providers/notes_provider.dart';
+import 'package:syncfusion_flutter_pdfviewer/pdfviewer.dart';
 
 class NoteDetailScreen extends ConsumerWidget {
   final String noteId;
@@ -98,7 +99,22 @@ class NoteDetailScreen extends ConsumerWidget {
                   ),
                 ),
               const Divider(height: AppSpacing.xl),
-              Text(note.content, style: Theme.of(context).textTheme.bodyLarge),
+
+              // Text(note.content, style: Theme.of(context).textTheme.bodyLarge),
+              if (note.pdfUrl != null ||
+                  (note.attachments.isNotEmpty &&
+                      note.attachments.first.toLowerCase().endsWith('.pdf')))
+                SizedBox(
+                  height: 500, // adjust as you like
+                  child: SfPdfViewer.network(
+                    note.pdfUrl ?? note.attachments.first,
+                  ),
+                )
+              else
+                Text(
+                  note.content,
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
             ],
           ),
         ),
