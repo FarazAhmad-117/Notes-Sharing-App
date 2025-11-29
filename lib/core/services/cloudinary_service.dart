@@ -257,7 +257,7 @@ class CloudinaryService {
       // Parameters for signature (exclude api_key and signature itself)
       final paramsForSignature = <String, String>{
         'timestamp': timestamp,
-        'resource_type': CloudinaryConstants.resourceTypeRaw,
+        // 'resource_type': CloudinaryConstants.resourceTypeRaw,
       };
 
       if (folder != null) {
@@ -271,7 +271,7 @@ class CloudinaryService {
       final params = <String, String>{
         'timestamp': timestamp,
         'api_key': CloudinaryConstants.apiKey,
-        'resource_type': CloudinaryConstants.resourceTypeRaw,
+        // 'resource_type': CloudinaryConstants.resourceTypeRaw,
         'signature': signature,
       };
 
@@ -279,7 +279,8 @@ class CloudinaryService {
         params['folder'] = folder;
       }
 
-      final uri = Uri.parse(CloudinaryConstants.uploadUrl);
+      // final uri = Uri.parse(CloudinaryConstants.uploadUrl);
+      final uri = Uri.parse(CloudinaryConstants.rawUploadUrl);
       final request = http.MultipartRequest('POST', uri);
 
       // Add all parameters
